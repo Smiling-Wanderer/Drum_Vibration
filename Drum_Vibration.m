@@ -50,10 +50,7 @@ classdef Drum_Vibration < handle
             B = .5;
             C = .5;
             D = .5;
-            
-            %Just for now, set Rho, H = 1;
-            obj.Rho = 1;
-            obj.H = 1;
+           
             
             %we set m and n to their corresponding values (see properties)
             obj.m = 0:length(roots)-1;
@@ -94,28 +91,31 @@ classdef Drum_Vibration < handle
             
             
             % Setup UI CONTROLS----------------------------------------------
-            %The B-B1 pairs are editable boxes and their corresponding titles.
+            %The X-X1 pairs are editable boxes and their corresponding titles.
+            TextBoxA = uicontrol('Style','text','String','The First 9 Modes of Drum Vibration',...
+                'Position',[350 670 400 20],'FontWeight','bold','FontSize',12);
             TextBoxB = uicontrol('Style','edit','String','Test',...
-                'Position',[10 400 100 50]);
-            TextBoxB1 = uicontrol('Style','text','String','Thickness (H)',...
-                'Position',[10 450 100 20]);
+                'Position',[10 650 50 20],'background','green');
+            TextBoxB1 = uicontrol('Style','text','String','Thickness',...
+                'Position',[10 670 50 20]);
             
-            TextBoxC = uicontrol('Style','edit','String','Test',...
-                'Position',[10 300 100 50]);
-            TextBoxC1 = uicontrol('Style','text','String','Density (Rho)',...
-                'Position',[10 350 100 20]);
+            popupC = uicontrol('Style', 'popup',...
+                   'String', {'Default','Leather','Mylar','Copper','Kevlar'},...
+                   'Position', [10 400 50 20],'background','green');
+            TextBoxC1 = uicontrol('Style','text','String','Material',...
+                'Position',[10 420 50 20]);
             
             TextBoxD = uicontrol('Style','edit','String','Test',...
-                'Position',[10 200 100 50]);
+                'Position',[10 200 50 20],'background','green');
             TextBoxD1 = uicontrol('Style','text','String','Radius',...
-                'Position',[10 250 100 20]);
+                'Position',[10 220 50 20]);
             
             Button = uicontrol('Style', 'pushbutton', 'String', 'start simulation',...
-                'Position', [10 100 100 50],...
+                'Position', [10 60 100 50],...
                 'Callback', @Simulation);
             
             StopButton = uicontrol('Style', 'pushbutton', 'String', 'stop simulation',...
-                'Position', [10 50 100 50],...
+                'Position', [10 10 100 50],...
                 'Callback', @stop_simulation);
             
             % -----------------------------------------------------------------
@@ -190,14 +190,31 @@ classdef Drum_Vibration < handle
             function property2gui()
                 obj.r = linspace(0,obj.a,10);
                 TextBoxB.String=num2str(obj.H);
-                TextBoxC.String=num2str(obj.Rho);
                 TextBoxD.String=num2str(obj.a);
             end
             
             %Get values from UI controls and set object properties
             function gui2property()
                 obj.H=str2double(TextBoxB.String);
-                obj.Rho=str2double(TextBoxC.String);
+                MAT = get(popupC,'Value');
+                switch MAT
+                    case 1
+                        obj.Rho = 1;
+                        obj.M = 'Default';
+                    case 2
+                        obj.Rho = .86e3;
+                        obj.M = 'Leather';
+                    case 3
+                        obj.Rho = 1380;
+                        obj.M = 'Mylar';
+                    case 4
+                        obj.Rho = 8.79e3;
+                        obj.M = 'Copper';
+                    otherwise
+                        obj.Rho = 1440;
+                        obj.M = 'Kevlar';
+                end
+                      
                 obj.a=str2double(TextBoxD.String);
                 obj.r(end) = obj.a;
             end
