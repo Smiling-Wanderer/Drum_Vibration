@@ -6,20 +6,24 @@ classdef Drum_Vibration < handle
     H;          %Thickness
     Rho;        %Density
     Area;       %Area
-    r;     %radius
-    a;      %maximum radius
-    Material;
-    FigGUI;
-    t;
-    theta;
+    r;          %radius
+    a;          %maximum radius
+    M;          %material
+    FigGUI;     %figure
+    t;          %The time over which we will see our vibration
+    theta;      %the possible angles on our circle (0,2*pi)
+    m;          %J_m for mth bessel function
+    n;          %n for the nth root of the J_m bessel function
+    Go;         %Logical for graphs
     
     end
     
     methods
         function [lbd_ass,roots] = Accept_Input(obj)
-           %Read input file here
+           %This function loads the Bessel functions zeros that we will use
            load 'Bessel_zero.dat'
            roots = Bessel_zero;
+           %creating associated lambdas with for our height of drum eqn.
            lbd_ass = roots/obj.a;
            
         end
@@ -28,9 +32,14 @@ classdef Drum_Vibration < handle
             %This saves the desired figures as .fig files
         end
         function U_mn = Cruncher(obj)
+            %This function calculates the height of the drum: U_mn
+            
+            %Loading data
             [lbd_ass,roots] = obj.Accept_Input();
-            obj.t = linspace(0,10,100);
-            obj.theta = linspace(0,2*pi,100);
+            
+            %Initializing time and theta (don't want these to be variable)
+            obj.t = linspace(0,10,10);
+            obj.theta = linspace(0,2*pi,10);
             
             %Assume that the waves propagate at the same speed in all directions
             N_rr = 1;
@@ -45,12 +54,18 @@ classdef Drum_Vibration < handle
             %Just for now, set Rho, H = 1;
             obj.Rho = 1;
             obj.H = 1;
+            
+            %we set m and n to their corresponding values (see properties)
+            obj.m = 0:length(roots)-1;
+            obj.n = 1:length(roots);
+
             %Here we initialize U_mn the drum height function
             %This function is dependent on the values m,n for the bessel function,
             %r,theta, and t. See
             %https://en.wikipedia.org/wiki/Vibrations_of_a_circular_membrane for more
             %details.
-            U_mn = zeros(3,3,100,100,100);
+            U_mn = zeros(length(roots),length(roots),length(obj.r),length(obj.theta),length(obj.t));
+            
             for ii = 1:length(roots)
                 for jj = 1:length(roots)
                     for kk = 1:length(obj.r)
@@ -71,7 +86,7 @@ classdef Drum_Vibration < handle
             if ~isempty(Z);return;end
             
             %Create figure
-            F = figure('Position',[100 100 700 500]);
+            F = figure('Position',[100 100 1000 700]);
             F.Tag='AddGUI';
             
             %Save figure to object property
@@ -110,51 +125,70 @@ classdef Drum_Vibration < handle
             
             
             function Simulation(~,~)
-                %Callback of 'run fit' Button
+                %Callback of 'start simulation' Button
                 gui2property()
                 property2gui()
-                Go = 1;
-                
-%                 while Go
+                obj.Go = 1;
+                while obj.Go
                     U_mn = obj.Cruncher();
-                    %Storing just a single snapshot of the drum for a particular instant (t = 1)
-                    for tt = 1: length(obj.t)
-                        for zz = 1:100
-                            for yy = 1:100
-                                Height(tt,yy,zz) = U_mn(1,1,yy,zz,tt);
-                            end
-                        end
-                    end
-                    %ShowIter=1000;
-%                     if (nn/ShowIter==round(nn/ShowIter))
-%                         pause(.01);if ~Go;break;end % Time to process closed figure
-%                         try
-                    plot_stuff(Height);
-%                         catch
-%                         end
-%                         pause(.01)
-%                     end
-%                 end
+                    plot_stuff(U_mn);
+                end
             end
             function stop_simulation(~,~)
                 %Callback of 'stop simulation button'
-                Go = 0;
+                obj.Go = 0;
             end
-            function plot_stuff(Height)
+            function plot_stuff(U_mn)
+                %plotting our drum membrane
                 for tt=1:length(obj.t)
-                    HTEMP(:,:) = Height(tt,:,:);
-                    surf(obj.theta,obj.r,HTEMP)
-                    axis ([0 7 0 obj.a -1 1])
-                    xlabel('theta')
-                    ylabel('r')
-                    zlabel('Height')
-                    title('Drum vibration')
-                    pause(0.1)
+                    
+                    for mm = 1:length(obj.m) 
+                        for nn = 1:length(obj.n)
+                            %Making indexes for our subplots
+                            if mm == 1
+                               if nn == 1
+                                   k = 1;
+                               elseif nn == 2
+                                   k = 2; 
+                               else 
+                                   k = 3;
+                               end
+                            elseif mm == 2
+                                if nn == 1
+                                   k = 4;
+                               elseif nn == 2
+                                   k = 5; 
+                               else 
+                                   k = 6;
+                                end
+                            else
+                                if nn == 1
+                                   k = 7;
+                               elseif nn == 2
+                                   k = 8; 
+                               else 
+                                   k = 9;
+                                end
+                            end
+                            %Storing our height in a matrix so we can use
+                            %surf
+                            HTEMP(:,:) = U_mn(mm,nn,:,:,tt);
+                            subplot(length(obj.m),length(obj.n),k)
+                            surf(obj.theta,obj.r,HTEMP)
+                            axis ([0 7 0 obj.a -.5 .5])
+                            xlabel('theta')
+                            ylabel('r')
+                            zlabel('Height')
+                            title(['m = ' num2str(mm-1) ', n = ' num2str(nn)])
+                            pause(0.1)
+                        end
+                    end
+                    
                 end
             end
             %Write object properties into GUI unicontrols
             function property2gui()
-                obj.r = linspace(0,obj.a,100);
+                obj.r = linspace(0,obj.a,10);
                 TextBoxB.String=num2str(obj.H);
                 TextBoxC.String=num2str(obj.Rho);
                 TextBoxD.String=num2str(obj.a);
