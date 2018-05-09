@@ -5,7 +5,6 @@ classdef Drum_Vibration < handle
     properties
     H;          %Thickness
     Rho;        %Density
-    Area;       %Area
     r;          %radius
     a;          %maximum radius
     M;          %material
@@ -15,6 +14,7 @@ classdef Drum_Vibration < handle
     m;          %J_m for mth bessel function
     n;          %n for the nth root of the J_m bessel function
     Go;         %Logical for graphs
+    Fig_file;   %Name of our fig file
     
     end
     
@@ -26,10 +26,6 @@ classdef Drum_Vibration < handle
            %creating associated lambdas with for our height of drum eqn.
            lbd_ass = roots/obj.a;
            
-        end
-        function Create_Output(obj)
-            %(This could also go inside the GUI class)
-            %This saves the desired figures as .fig files
         end
         function U_mn = Cruncher(obj)
             %This function calculates the height of the drum: U_mn
@@ -76,7 +72,6 @@ classdef Drum_Vibration < handle
             
         end
         function gui(obj)
-            %Gui
             
             %See if we already have a figure for this class
             Z=findall(0,'Tag','AddGUI');
@@ -109,7 +104,15 @@ classdef Drum_Vibration < handle
                 'Position',[10 200 50 20],'background','green');
             TextBoxD1 = uicontrol('Style','text','String','Radius',...
                 'Position',[10 220 50 20]);
+ 
+            %Save figure button and text box
+            Save_Fig_Edit = uicontrol('Style','edit','String','Test',...
+                'Position',[550 10 100 20],'background','green');
+            SaveButton = uicontrol('Style', 'pushbutton', 'String', 'Save Figure',...
+                'Position', [450 10 100 20],...
+                'Callback', @save_fig);
             
+            %Start+Stop buttons
             Button = uicontrol('Style', 'pushbutton', 'String', 'start simulation',...
                 'Position', [10 60 100 50],...
                 'Callback', @Simulation);
@@ -191,11 +194,14 @@ classdef Drum_Vibration < handle
                 obj.r = linspace(0,obj.a,10);
                 TextBoxB.String=num2str(obj.H);
                 TextBoxD.String=num2str(obj.a);
+                Save_Fig_Edit.String='file_name.fig';
             end
             
             %Get values from UI controls and set object properties
             function gui2property()
+                %Thickness of drum membrance
                 obj.H=str2double(TextBoxB.String);
+                %Changing density of drum membrane for different materials
                 MAT = get(popupC,'Value');
                 switch MAT
                     case 1
@@ -217,6 +223,11 @@ classdef Drum_Vibration < handle
                       
                 obj.a=str2double(TextBoxD.String);
                 obj.r(end) = obj.a;
+                obj.Fig_file = Save_Fig_Edit.String;
+            end
+            function save_fig(~,~)
+                gui2property();
+                savefig(obj.Fig_file)
             end
             
         end
