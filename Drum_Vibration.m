@@ -1,6 +1,7 @@
 classdef Drum_Vibration < handle
     %This class will allow us to model the various modes of vibration of a
-    %drum.
+    %drum by examining change in height of the drum as a function of theta,
+    %radius and time. 
     
     properties
     H;          %Thickness
@@ -19,6 +20,7 @@ classdef Drum_Vibration < handle
     end
     
     methods
+        %This function will load the Bessel function roots from a .dat file
         function [lbd_ass,roots] = Accept_Input(obj)
            %This function loads the Bessel functions zeros that we will use
            load 'Bessel_zero.dat'
@@ -27,15 +29,16 @@ classdef Drum_Vibration < handle
            lbd_ass = roots/obj.a;
            
         end
+        %This function calculates the height of the drum: U_mn
         function U_mn = Cruncher(obj)
-            %This function calculates the height of the drum: U_mn
-            
+
             %Loading data
             [lbd_ass,roots] = obj.Accept_Input();
             
             %Initializing time and theta (don't want these to be variable)
             obj.t = linspace(0,10,10);
             obj.theta = linspace(0,2*pi,10);
+            
             
             %Assume that the waves propagate at the same speed in all directions
             N_rr = 1;
@@ -182,6 +185,8 @@ classdef Drum_Vibration < handle
                             xlabel('theta')
                             ylabel('r')
                             zlabel('Height')
+                            %Making title the "quantum numbers" of the mode
+                            %of vibration
                             title(['m = ' num2str(mm-1) ', n = ' num2str(nn)])
                             pause(0.1)
                         end
